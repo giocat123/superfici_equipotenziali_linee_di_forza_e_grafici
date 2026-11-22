@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campo elettrostatico: equipotenziali, linee di forza e potenziale lungo una traiettoria</title>
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--ink:#16181d;--mute:#5d6470;--line:#d9dce2;--grid:#00000012;--axis:#00000040;--pos:#c8372d;--neg:#2563c9;--p:#e08a00;--field:#b8453d}
+@media (prefers-color-scheme:dark){:root{--bg:#101215;--panel:#191c21;--ink:#eceef2;--mute:#9aa1ad;--line:#2b2f37;--grid:#ffffff12;--axis:#ffffff45;--pos:#ff6b5e;--neg:#6ea0ff;--p:#ffb020;--field:#e8857b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+.wrap{max-width:1000px;margin:auto}
+h1{font-size:21px;margin:6px 0 2px}
+h2{font-size:16px;margin:0 0 8px}
+p.sub{margin:0 0 12px;color:var(--mute);font-size:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px}
+.ctrl label{display:flex;align-items:center;gap:9px;min-height:38px;padding:0 14px;border-radius:999px;background:var(--bg);border:1px solid var(--line);transition:background .15s,border-color .15s;cursor:pointer;user-select:none}
+.ctrl label:hover{border-color:var(--mute)}
+.ctrl label:has(input[type=checkbox]:checked){background:color-mix(in srgb,var(--p) 16%,transparent);border-color:var(--p)}
+.ctrl label:has(:focus-visible){outline:2px solid var(--p);outline-offset:2px}
+.ctrl label.t3d{font-weight:600;border-color:var(--p)}
+.ctrl input[type=checkbox]{-webkit-appearance:none;appearance:none;margin:0;width:32px;height:19px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:background .15s;outline:none}
+.ctrl input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0005;transition:transform .15s}
+.ctrl input[type=checkbox]:checked{background:var(--p)}
+.ctrl input[type=checkbox]:checked::after{transform:translateX(13px)}
+.ctrl input[type=range]{-webkit-appearance:none;appearance:none;width:110px;height:4px;margin:0;border-radius:999px;background:var(--line);outline:none;cursor:pointer}
+.ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--p);border:3px solid var(--panel);box-shadow:0 0 0 1px var(--p),0 1px 3px #0005}
+.ctrl input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--p);border:3px solid var(--panel);box-shadow:0 0 0 1px var(--p)}
+.ctrl input[type=range]:disabled{opacity:.4;cursor:not-allowed}
+.ctrl output{min-width:2.2em;text-align:right;font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px}
+select{-webkit-appearance:none;appearance:none;font:inherit;color:var(--ink);cursor:pointer;min-height:36px;padding:0 26px 0 6px;border:0;border-radius:999px;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 4px center;outline:none}
+select option{background:var(--panel);color:var(--ink)}
+button{font:inherit;min-height:38px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+button:hover{border-color:var(--mute)}
+button:active{transform:scale(.97)}
+button.on{background:var(--p);color:#111;border-color:var(--p);font-weight:600}
+:focus-visible{outline:2px solid var(--p);outline-offset:2px}
+canvas{display:block;width:100%;height:auto;border-radius:6px;touch-action:none}
+#cv{cursor:crosshair}#cv.m3{cursor:grab}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute);margin-top:8px}
+.sw{display:inline-block;width:20px;height:8px;margin-right:5px;vertical-align:middle;border-radius:2px}
+.read{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
+.read div{background:var(--bg);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--mute)}
+.read b{display:block;font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--mute);margin:8px 0 0}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Campo elettrostatico di cariche puntiformi</h1>
+<p class="sub">Equipotenziali, linee di forza e andamento del potenziale lungo la traiettoria del punto P. La vista 3D si accende e si spegne.</p>
+
+<div class="panel">
+ <div class="ctrl">
+  <label class="t3d"><input id="t3d" type="checkbox" checked> Vista 3D</label>
+  <label>Cariche
+   <select id="cfg">
+    <option value="opp">+q e −q (discordi)</option>
+    <option value="pp">+q e +q (concordi)</option>
+    <option value="nn">−q e −q (concordi)</option>
+    <option value="one">+q sola</option>
+   </select></label>
+  <label>d <input id="sep" type="range" min="1" max="8" step=".1" value="4"><output id="sepO">4.0</output></label>
+  <label>|q| <input id="mag" type="range" min=".5" max="2" step=".1" value="1"><output id="magO">1.0</output></label>
+  <label>Superfici <input id="nlev" type="range" min="1" max="7" step="1" value="4"></label>
+  <label><input id="cbS" type="checkbox" checked> equipotenziali</label>
+  <label><input id="cbL" type="checkbox" checked> linee di forza</label>
+  <label class="o3"><input id="cbC" type="checkbox" checked> sezione</label>
+  <label class="o3">Zoom <input id="zoom" type="range" min=".6" max="2" step=".05" value="1"></label>
+  <button id="rst">Ripristina</button>
+ </div>
+</div>
+
+<div class="panel">
+ <canvas id="cv" width="900" height="620" aria-label="Scena del campo elettrostatico"></canvas>
+ <div class="leg">
+  <span><i class="sw" style="background:#2563c9"></i>V&gt;0</span>
+  <span><i class="sw" style="background:#1d9a6c"></i>V&lt;0</span>
+  <span><i class="sw" style="background:#7c3aed"></i>V=0</span>
+  <span><i class="sw" style="background:var(--p)"></i>equipotenziale e linea di forza per P</span>
+  <span><i class="sw" style="background:var(--field);height:3px"></i>linee di forza</span>
+  <span id="hint">Trascina sul disegno per spostare P</span>
+ </div>
+ <div class="ctrl" style="margin-top:10px">
+  <label>P: x <input id="px" type="range" min="-8" max="8" step=".1" value="1.5"></label>
+  <label>y <input id="py" type="range" min="-5" max="5" step=".1" value="-2"></label>
+  <label class="o3">z <input id="pz" type="range" min="-5" max="5" step=".1" value="1.5"></label>
+ </div>
+</div>
+
+<div class="panel">
+ <h2>Potenziale lungo la traiettoria di P</h2>
+ <div class="ctrl">
+  <label>Traiettoria
+   <select id="dir">
+    <option value="x">retta parallela all'asse x</option>
+    <option value="y">retta parallela all'asse y</option>
+    <option value="z" class="o3">retta parallela all'asse z</option>
+    <option value="r">retta radiale dalla carica più vicina</option>
+   </select></label>
+  <button id="play">Anima P</button>
+ </div>
+ <div class="read">
+  <div>Posizione P<b id="rP">–</b></div>
+  <div>V(P)<b id="rV">–</b></div>
+  <div>|E(P)|<b id="rE">–</b></div>
+  <div>Direzione E nel piano<b id="rA">–</b></div>
+ </div>
+ <canvas id="gv" width="900" height="320" aria-label="Grafico del potenziale lungo la traiettoria"></canvas>
+ <p class="note">La retta tratteggiata nella scena è la traiettoria su cui si muove P; il grafico mostra V in ogni suo punto. Unità arbitrarie con k = 1: V = Σ q/r, E = Σ q·r̂/r². Le cariche stanno sull'asse x, quindi il sistema ha simmetria di rotazione attorno a esso: le equipotenziali sono superfici di rotazione e il campo è sempre perpendicolare a esse, verso V decrescente. Il grafico è troncato a ±4 vicino alle cariche, dove V diverge.</p>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d'),gv=$('gv'),gx=gv.getContext('2d'),W=cv.width,H=cv.height;
+const XM=9,RM=7.5,NX=90,NR=45,S2=W/(2*XM);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const colors={p:[37,99,201],n:[29,154,108],z:[124,58,237],o:[224,138,0]};
+let yaw=-.5,pit=.5,Q=[],segs=[],lines=[],grid,Pc={segs:[],l1:[],l2:[]},P={x:1.5,y:-2,z:1.5},m3=true;
+
+function charges(){
+  const d=+$('sep').value,q=+$('mag').value,c=$('cfg').value;
+  if(c==='one')return[{x:0,q}];
+  const s=c==='opp'?[1,-1]:c==='pp'?[1,1]:[-1,-1];
+  return[{x:-d/2,q:s[0]*q},{x:d/2,q:s[1]*q}];
+}
+const V=(x,r)=>Q.reduce((v,a)=>v+a.q/Math.sqrt((x-a.x)**2+r*r+1e-4),0);
+const E=(x,r)=>{let ex=0,er=0;for(const a of Q){const dx=x-a.x,r2=dx*dx+r*r+1e-4,f=a.q/(r2*Math.sqrt(r2));ex+=f*dx;er+=f*r}return[ex,er]};
+const near=(x,r,rad)=>Q.some(a=>(x-a.x)**2+r*r<rad*rad);
+const rho=p=>Math.hypot(p.y,p.z);
+
+function proj(x,y,z){
+  const c=Math.cos(yaw),s=Math.sin(yaw),x1=x*c-y*s,y1=x*s+y*c;
+  const cp=Math.cos(pit),sp=Math.sin(pit),k=W/(2*XM*1.12)*(+$('zoom').value);
+  return[W/2+x1*k,H*.5-(y1*sp+z*cp)*k,y1*cp-z*sp];
+}
+const p2=(x,y)=>[W/2+x*S2,H/2-y*S2];
+const pt=(x,y,z)=>m3?proj(x,y,z):p2(x,y);
+
+function contour(L){
+  const out=[],g=(i,j)=>grid[j*(NX+1)+i],X=i=>-XM+2*XM*i/NX,R=j=>RM*j/NR;
+  for(let j=0;j<NR;j++)for(let i=0;i<NX;i++){
+    const c=[[i,j,g(i,j)],[i+1,j,g(i+1,j)],[i+1,j+1,g(i+1,j+1)],[i,j+1,g(i,j+1)]],p=[];
+    for(let e=0;e<4;e++){const a=c[e],b=c[(e+1)%4];
+      if((a[2]-L)*(b[2]-L)<0){const t=(L-a[2])/(b[2]-a[2]);p.push([X(a[0]+t*(b[0]-a[0])),R(a[1]+t*(b[1]-a[1]))])}}
+    for(let k=0;k+1<p.length;k+=2)out.push(p[k][0],p[k][1],p[k+1][0],p[k+1][1]);
+  }
+  return out;
+}
+function trace(x,r,dir){
+  const pts=[[x,r]];
+  for(let n=0;n<700;n++){
+    if(Math.abs(x)>XM+.5||r>RM+.5||r<0||near(x,r,.2))break;
+    const[a,b]=E(x,r),m=Math.hypot(a,b);if(m<1e-9)break;
+    const h=.1*dir,[c,d]=E(x+a/m*h/2,r+b/m*h/2),k=Math.hypot(c,d);if(k<1e-9)break;
+    x+=c/k*h;r+=d/k*h;pts.push([x,r]);
+  }
+  return pts;
+}
+function levelList(){
+  const n=+$('nlev').value,L=[];
+  for(let k=0;k<n;k++){const v=.2*Math.pow(1.7,k);L.push([v,'p'],[-v,'n'])}
+  if(Q.length===2&&Q[0].q*Q[1].q<0)L.push([0,'z']);
+  return L;
+}
+function rebuild(){
+  Q=charges();
+  $('sepO').textContent=(+$('sep').value).toFixed(1);$('magO').textContent=(+$('mag').value).toFixed(1);
+  $('sep').disabled=$('cfg').value==='one';
+  grid=new Float32Array((NX+1)*(NR+1));
+  for(let j=0;j<=NR;j++)for(let i=0;i<=NX;i++)grid[j*(NX+1)+i]=V(-XM+2*XM*i/NX,RM*j/NR);
+  segs=levelList().map(([v,t])=>({t,list:contour(v)})).filter(s=>s.list.length);
+  lines=[];
+  for(const a of Q){const dir=a.q>0?1:-1;
+    for(let i=0;i<8;i++){const th=Math.PI*(i+.5)/8;lines.push({dir,pts:trace(a.x+.26*Math.cos(th),.26*Math.sin(th),dir)})}}
+  rebuildP();
+}
+function rebuildP(){
+  const r=rho(P);Pc.v=V(P.x,r);
+  Pc.segs=contour(Pc.v);Pc.l1=trace(P.x,Math.max(r,1e-3),1);Pc.l2=trace(P.x,Math.max(r,1e-3),-1);
+  const[ex,er]=E(P.x,r);Pc.E=[ex,er];
+  $('rP').textContent=`(${P.x.toFixed(1)} ; ${P.y.toFixed(1)} ; ${P.z.toFixed(1)})`;
+  $('rV').textContent=Pc.v.toFixed(3);$('rE').textContent=Math.hypot(ex,er).toFixed(3);
+  $('rA').textContent=(Math.atan2(er,ex)*180/Math.PI).toFixed(0)+'° (x, ρ)';
+}
+function sync(){$('px').value=P.x;$('py').value=P.y;$('pz').value=P.z}
+
+// traiettoria
+function lineDef(){
+  const m=$('dir').value,p=P,r0=rho(p);
+  if(m==='x')return{a0:-XM,a1:XM,t:p.x,lab:'x',f:t=>V(t,r0),set:t=>{P.x=t},e:[[-XM,p.y,p.z],[XM,p.y,p.z]]};
+  if(m==='y')return{a0:-5,a1:5,t:p.y,lab:'y',f:t=>V(p.x,Math.hypot(t,p.z)),set:t=>{P.y=t},e:[[p.x,-5,p.z],[p.x,5,p.z]]};
+  if(m==='z')return{a0:-5,a1:5,t:p.z,lab:'z',f:t=>V(p.x,Math.hypot(p.y,t)),set:t=>{P.z=t},e:[[p.x,p.y,-5],[p.x,p.y,5]]};
+  let c=Q[0];for(const a of Q)if(Math.hypot(p.x-a.x,r0)<Math.hypot(p.x-c.x,r0))c=a;
+  const R=Math.hypot(p.x-c.x,p.y,p.z)||1e-6,u=[(p.x-c.x)/R,p.y/R,p.z/R];
+  return{a0:0,a1:8,t:R,lab:'distanza dalla carica',f:t=>V(c.x+u[0]*t,Math.hypot(u[1],u[2])*t),
+    set:t=>{P.x=c.x+u[0]*t;P.y=u[1]*t;P.z=u[2]*t},e:[[c.x,0,0],[c.x+u[0]*8,u[1]*8,u[2]*8]],c};
+}
+
+const arrow=(a,b,col,s=8)=>{const t=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(b[0],b[1]);
+  ctx.lineTo(b[0]-s*Math.cos(t-.45),b[1]-s*Math.sin(t-.45));ctx.lineTo(b[0]-s*Math.cos(t+.45),b[1]-s*Math.sin(t+.45));ctx.fill()};
+function chargesAndP(def){
+  const p=P,r=rho(p),phi=Math.atan2(p.z,p.y);
+  // traiettoria
+  const e0=pt(...def.e[0]),e1=pt(...def.e[1]);
+  ctx.strokeStyle=css('--mute');ctx.lineWidth=1.3;ctx.setLineDash([7,5]);ctx.beginPath();ctx.moveTo(e0[0],e0[1]);ctx.lineTo(e1[0],e1[1]);ctx.stroke();ctx.setLineDash([]);
+  for(const a of Q){
+    const c=pt(a.x,0,0);
+    ctx.beginPath();ctx.arc(c[0],c[1],m3?13:16,0,7);ctx.fillStyle=a.q>0?css('--pos'):css('--neg');ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(a.q>0?'+':'−',c[0],c[1]+1);
+  }
+  const pp=pt(p.x,p.y,p.z);
+  if(m3){const ft=pt(p.x,0,0);ctx.strokeStyle=css('--p');ctx.lineWidth=1.3;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(ft[0],ft[1]);ctx.lineTo(pp[0],pp[1]);ctx.stroke();ctx.setLineDash([])}
+  // vettore E
+  const[ex,er]=Pc.E,em=Math.hypot(ex,er)||1,L=1.5;
+  const tip=pt(p.x+ex/em*L,(p.y/(r||1))*(r+er/em*L),(p.z/(r||1))*(r+er/em*L));
+  ctx.strokeStyle=css('--p');ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(pp[0],pp[1]);ctx.lineTo(tip[0],tip[1]);ctx.stroke();arrow(pp,tip,css('--p'),10);
+  ctx.beginPath();ctx.arc(pp[0],pp[1],7,0,7);ctx.fillStyle=css('--p');ctx.fill();ctx.strokeStyle=css('--panel');ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=css('--ink');ctx.font='bold 14px system-ui';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('P',pp[0]+10,pp[1]-8);
+}
+
+function frame3(def){
+  const cut=$('cbC').checked,a0=cut?Math.PI:0,span=cut?1.5*Math.PI:2*Math.PI,NA=cut?18:26,cs=[],sn=[];
+  for(let k=0;k<=NA;k++){const a=a0+span*k/NA;cs.push(Math.cos(a));sn.push(Math.sin(a))}
+  const rot=(x,r,k)=>proj(x,r*cs[k],r*sn[k]);
+  const A=proj(-XM,0,0),B=proj(XM,0,0);
+  ctx.strokeStyle=css('--axis');ctx.setLineDash([6,5]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=css('--mute');ctx.font='13px system-ui';ctx.textAlign='left';ctx.fillText('x',B[0]+6,B[1]+4);
+  if($('cbS').checked){
+    const quads=[];
+    const add=(list,rgb,al)=>{for(let s=0;s<list.length;s+=4){
+      const x1=list[s],r1=list[s+1],x2=list[s+2],r2=list[s+3];let pa=rot(x1,r1,0),pb=rot(x2,r2,0);
+      for(let k=0;k<NA;k++){const qa=rot(x1,r1,k+1),qb=rot(x2,r2,k+1);
+        quads.push({p:[pa,pb,qb,qa],d:(pa[2]+pb[2]+qa[2]+qb[2])/4,c:rgb,a:al});pa=qa;pb=qb}}};
+    for(const s of segs)add(s.list,colors[s.t],.13);
+    add(Pc.segs,colors.o,.28);
+    quads.sort((u,v)=>v.d-u.d);
+    for(const q of quads){ctx.beginPath();q.p.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+      ctx.fillStyle=`rgba(${q.c[0]},${q.c[1]},${q.c[2]},${q.a})`;ctx.fill()}
+    if(cut){const prof=(list,rgb,w)=>{ctx.strokeStyle=`rgb(${rgb})`;ctx.lineWidth=w;ctx.beginPath();
+      for(const k of[0,NA])for(let s=0;s<list.length;s+=4){const a=rot(list[s],list[s+1],k),b=rot(list[s+2],list[s+3],k);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])}
+      ctx.stroke()};
+      for(const s of segs)prof(s.list,colors[s.t],1.2);prof(Pc.segs,colors.o,2)}
+  }
+  const phi=Math.atan2(P.z,P.y);
+  const dl=(pts,ph,dir,col,w,ar)=>{ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();
+    const Pp=pts.map(p=>proj(p[0],p[1]*Math.cos(ph),p[1]*Math.sin(ph)));
+    Pp.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+    if(ar&&Pp.length>30){const i=Pp.length>>1;dir>0?arrow(Pp[i],Pp[i+1],col):arrow(Pp[i+1],Pp[i],col)}};
+  if($('cbL').checked)for(let m=0;m<8;m++){const ph=m*Math.PI/4;
+    if(cut&&ph>Math.PI/2+1e-6&&ph<Math.PI-1e-6)continue;
+    for(const l of lines)dl(l.pts,ph,l.dir,css('--field'),1,true)}
+  dl(Pc.l1,phi,1,css('--p'),2.6,false);dl(Pc.l2,phi,-1,css('--p'),2.6,false);
+}
+function frame2(def){
+  ctx.lineWidth=1;ctx.strokeStyle=css('--grid');ctx.beginPath();
+  for(let x=-XM;x<=XM;x++){const a=p2(x,0);ctx.moveTo(a[0],0);ctx.lineTo(a[0],H)}
+  for(let y=-6;y<=6;y++){const a=p2(0,y);ctx.moveTo(0,a[1]);ctx.lineTo(W,a[1])}
+  ctx.stroke();ctx.strokeStyle=css('--axis');ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  const sgn=P.y<0?-1:1;
+  const seg=(list,rgb,w)=>{ctx.strokeStyle=`rgb(${rgb})`;ctx.lineWidth=w;ctx.beginPath();
+    for(let s=0;s<list.length;s+=4)for(const m of[1,-1]){const a=p2(list[s],m*list[s+1]),b=p2(list[s+2],m*list[s+3]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])}
+    ctx.stroke()};
+  if($('cbS').checked){for(const s of segs)seg(s.list,colors[s.t],1.2);seg(Pc.segs,colors.o,2.4)}
+  const dl=(pts,m,dir,col,w,ar)=>{ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();
+    const Pp=pts.map(p=>p2(p[0],m*p[1]));Pp.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+    if(ar&&Pp.length>30){for(const f of[.35,.7]){const i=Math.floor(Pp.length*f);dir>0?arrow(Pp[i],Pp[i+1],col,6):arrow(Pp[i+1],Pp[i],col,6)}}};
+  if($('cbL').checked)for(const l of lines)for(const m of[1,-1])dl(l.pts,m,l.dir,css('--field'),1.1,true);
+  dl(Pc.l1,sgn,1,css('--p'),2.6,false);dl(Pc.l2,sgn,-1,css('--p'),2.6,false);
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);const def=lineDef();
+  m3?frame3(def):frame2(def);
+  chargesAndP(def);graph(def);
+}
+function graph(def){
+  const w=gv.width,h=gv.height,m={l:52,r:14,t:14,b:36},CL=4;gx.clearRect(0,0,w,h);
+  const N=500,ys=[];for(let i=0;i<=N;i++)ys.push(Math.max(-CL,Math.min(CL,def.f(def.a0+(def.a1-def.a0)*i/N))));
+  let lo=Math.min(...ys,0),hi=Math.max(...ys,0);const pad=(hi-lo)*.08||1;lo-=pad;hi+=pad;
+  const X=t=>m.l+(t-def.a0)/(def.a1-def.a0)*(w-m.l-m.r),Y=v=>h-m.b-(v-lo)/(hi-lo)*(h-m.t-m.b);
+  gx.font='12px system-ui';gx.fillStyle=css('--mute');gx.strokeStyle=css('--grid');gx.lineWidth=1;
+  for(let i=0;i<=5;i++){const v=lo+(hi-lo)*i/5;gx.beginPath();gx.moveTo(m.l,Y(v));gx.lineTo(w-m.r,Y(v));gx.stroke();gx.textAlign='right';gx.textBaseline='middle';gx.fillText(v.toFixed(1),m.l-6,Y(v))}
+  gx.textAlign='center';gx.textBaseline='top';
+  for(let t=Math.ceil(def.a0);t<=def.a1;t+=(def.a1-def.a0>10?2:1))gx.fillText(t,X(t),h-m.b+6);
+  gx.fillText(def.lab,(m.l+w-m.r)/2,h-16);
+  gx.strokeStyle=css('--axis');gx.beginPath();gx.moveTo(m.l,Y(0));gx.lineTo(w-m.r,Y(0));gx.stroke();
+  if(def.lab==='x')for(const a of Q){gx.fillStyle=a.q>0?css('--pos'):css('--neg');gx.fillRect(X(a.x)-1.5,m.t,3,8)}
+  gx.strokeStyle=css('--neg');gx.lineWidth=2;gx.beginPath();
+  ys.forEach((v,i)=>{const t=def.a0+(def.a1-def.a0)*i/N;i?gx.lineTo(X(t),Y(v)):gx.moveTo(X(t),Y(v))});gx.stroke();
+  const vp=Pc.v,cp=Math.max(-CL,Math.min(CL,vp)),tp=Math.max(def.a0,Math.min(def.a1,def.t));
+  gx.setLineDash([5,4]);gx.strokeStyle=css('--p');gx.lineWidth=1.5;gx.beginPath();gx.moveTo(X(tp),h-m.b);gx.lineTo(X(tp),Y(cp));gx.moveTo(m.l,Y(cp));gx.lineTo(X(tp),Y(cp));gx.stroke();gx.setLineDash([]);
+  gx.beginPath();gx.arc(X(tp),Y(cp),6,0,7);gx.fillStyle=css('--p');gx.fill();
+  gx.fillStyle=css('--ink');gx.font='bold 13px system-ui';const right=X(tp)>w/2;gx.textAlign=right?'right':'left';gx.textBaseline='bottom';
+  gx.fillText('V(P) = '+vp.toFixed(2),X(tp)+(right?-10:10),Y(cp)-8);
+}
+// animazione di P lungo la traiettoria
+let anim=null;
+function tick(ts){
+  if(!anim)return;
+  const dt=Math.min(50,ts-anim.last);anim.last=ts;const d=anim.def;
+  anim.t+=anim.s*(d.a1-d.a0)*dt/5000;
+  if(anim.t>d.a1){anim.t=d.a1;anim.s=-1}if(anim.t<d.a0){anim.t=d.a0;anim.s=1}
+  d.set(anim.t);sync();rebuildP();draw();requestAnimationFrame(tick);
+}
+$('play').onclick=()=>{
+  if(anim){anim=null;$('play').classList.remove('on');$('play').textContent='Anima P';return}
+  const d=lineDef();anim={def:d,t:Math.max(d.a0,Math.min(d.a1,d.t)),s:1,last:performance.now()};
+  $('play').classList.add('on');$('play').textContent='Ferma';requestAnimationFrame(tick);
+};
+function stopAnim(){if(anim){anim=null;$('play').classList.remove('on');$('play').textContent='Anima P'}}
+// 2D/3D
+function setMode(){
+  m3=$('t3d').checked;
+  document.querySelectorAll('.o3').forEach(e=>e.classList.toggle('hide',!m3));
+  cv.classList.toggle('m3',m3);
+  $('hint').textContent=m3?'Trascina per ruotare; P si sposta con i cursori':'Trascina sul disegno per spostare P (piano z = 0)';
+  if(!m3){const r=rho(P),s=P.y<0?-1:1;P.y=s*Math.min(r,5);P.z=0;if($('dir').value==='z')$('dir').value='y';sync();rebuildP()}
+  draw();
+}
+let drag=null;
+function setP2(e){
+  const b=cv.getBoundingClientRect();
+  P.x=Math.max(-8,Math.min(8,((e.clientX-b.left)/b.width*W-W/2)/S2));
+  P.y=Math.max(-5,Math.min(5,-((e.clientY-b.top)/b.height*H-H/2)/S2));P.z=0;
+  stopAnim();sync();rebuildP();draw();
+}
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);if(m3)drag=[e.clientX,e.clientY];else{drag=true;setP2(e)}});
+cv.addEventListener('pointermove',e=>{if(!drag)return;
+  if(m3){yaw+=(e.clientX-drag[0])*.008;pit=Math.max(-1.5,Math.min(1.5,pit+(e.clientY-drag[1])*.006));drag=[e.clientX,e.clientY];draw()}else setP2(e)});
+cv.addEventListener('pointerup',()=>drag=null);
+cv.addEventListener('wheel',e=>{if(!m3)return;e.preventDefault();const z=$('zoom');z.value=Math.max(.6,Math.min(2,+z.value-e.deltaY*.001));draw()},{passive:false});
+for(const id of['cfg','sep','mag','nlev'])$(id).addEventListener('input',()=>{stopAnim();rebuild();draw()});
+for(const id of['px','py','pz'])$(id).addEventListener('input',()=>{stopAnim();P.x=+$('px').value;P.y=+$('py').value;P.z=m3?+$('pz').value:0;rebuildP();draw()});
+for(const id of['cbS','cbL','cbC','zoom','dir'])$(id).addEventListener('input',()=>{if(id==='dir')stopAnim();draw()});
+$('t3d').addEventListener('input',setMode);
+$('rst').onclick=()=>{stopAnim();yaw=-.5;pit=.5;$('cfg').value='opp';$('sep').value=4;$('mag').value=1;$('nlev').value=4;$('zoom').value=1;$('dir').value='x';
+  P={x:1.5,y:-2,z:m3?1.5:0};sync();for(const id of['cbS','cbL','cbC'])$(id).checked=true;rebuild();draw()};
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',draw);
+rebuild();setMode();
+</script>
+</body>
+</html>
